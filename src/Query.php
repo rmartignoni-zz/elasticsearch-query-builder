@@ -1,6 +1,6 @@
 <?php
 
-    namespace eSapiens\Libraries\ElasticSearch;
+    namespace rmartignoni\ElasticSearch;
 
     class Query extends Search
     {

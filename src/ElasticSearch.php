@@ -1,6 +1,6 @@
 <?php
 
-    namespace eSapiens\Libraries\ElasticSearch;
+    namespace rmartignoni\ElasticSearch;
 
     use Elasticsearch\Client;
 
@@ -69,6 +69,42 @@
             $hosts = unserialize(ES_HOSTS);
 
             $this->es = new Client(['hosts' => $hosts]);
+        }
+
+        /**
+         * @param      $index
+         * @param null $document
+         *
+         * @return $this
+         */
+        public function changeIndex($index, $document = null)
+        {
+            $this->index = $index;
+
+            if (!is_null($document))
+            {
+                $this->type = $document;
+            }
+
+            return $this;
+        }
+
+        /**
+         * @param      $document
+         * @param null $index
+         *
+         * @return $this
+         */
+        public function changeDocument($document, $index = null)
+        {
+            $this->type = $document;
+
+            if (!is_null($index))
+            {
+                $this->index = $index;
+            }
+
+            return $this;
         }
 
         /**
@@ -148,7 +184,7 @@
 
                 if ($column === 'proximity')
                 {
-                    if(is_null($condition[$column]))
+                    if (is_null($condition[$column]))
                     {
                         continue;
                     }
