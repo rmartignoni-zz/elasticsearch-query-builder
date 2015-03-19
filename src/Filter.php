@@ -1,6 +1,6 @@
 <?php
 
-    namespace rmartignoni\ElasticSearch;
+    namespace eSapiens\Libraries\ElasticSearch;
 
     class Filter extends Search
     {

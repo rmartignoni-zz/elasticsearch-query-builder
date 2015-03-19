@@ -1,6 +1,6 @@
 <?php
 
-    namespace rmartignoni\ElasticSearch;
+    namespace eSapiens\Libraries\ElasticSearch;
 
     use Elasticsearch\Client;
 
@@ -80,7 +80,13 @@
         {
             $params['index'] = $this->index;
             $params['type']  = $this->type;
-            $params['body']  = $this->body;
+
+            if (in_array(ENVIRONMENT, [\Environment::DEVELOPMENT]))
+            {
+                // $params['explain'] = true;
+            }
+
+            $params['body'] = $this->body;
 
             $this->buildQuery($params);
 
@@ -104,7 +110,11 @@
                 $params['body']['aggs'] = $this->groupBy;
             }
 
-            if (!is_null($this->queriedFields))
+            /*
+             * Monta o highlight nos resultados encontrados. Comentado pois isto está sendo feito no client.
+             */
+
+            /*if (!is_null($this->queriedFields))
             {
                 $params['body']['highlight']['pre_tags']  = '<span>';
                 $params['body']['highlight']['post_tags'] = '</span>';
@@ -113,7 +123,7 @@
                 {
                     $params['body']['highlight']['fields'][$key] = new \stdClass();
                 }
-            }
+            }*/
 
             return $params;
         }
@@ -138,7 +148,12 @@
 
                 if ($column === 'proximity')
                 {
-                    $sort['_geo_distance'] = [
+                    if(is_null($condition[$column]))
+                    {
+                        continue;
+                    }
+
+                    $sort[]['_geo_distance'] = [
                         'lat_lon'       => $condition[$column],
                         'order'         => 'asc',
                         'unit'          => 'km',
@@ -166,7 +181,7 @@
         {
             if (!is_null($this->filter))
             {
-                if (is_null($this->query))
+                if (empty($this->query))
                 {
                     return $params['body']['query']['filtered']['query']['match_all'] = new \stdClass;
                 }
@@ -191,8 +206,6 @@
         {
             $body = $this->buildRequestBody();
 
-            log_message('DEBUG', 'JSON enviado para o server: ' . json_encode($body));
-
             try
             {
                 $results = $this->es->search($body);
@@ -200,7 +213,7 @@
             catch (\Exception $e)
             {
                 log_message('ERROR', 'Erro no ElasticSearch: ' . $e->getMessage());
-                log_message('ERROR', 'JSON enviado para o server: ' . json_encode($body));
+                log_message('ERROR', 'JSON enviado para o ElasticSearch: ' . json_encode($body));
 
                 $results = null;
             }
@@ -209,6 +222,9 @@
             {
                 return null;
             }
+
+            log_message('DEBUG', 'JSON enviado para o ElasticSearch: ' . json_encode($body));
+            log_message('DEBUG', 'Resultado do ElasticSearch: ' . json_encode($results));
 
             return $this->processResults($results);
         }

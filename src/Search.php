@@ -1,6 +1,6 @@
 <?php
 
-    namespace rmartignoni\ElasticSearch;
+    namespace eSapiens\Libraries\ElasticSearch;
 
     abstract class Search
     {
@@ -446,7 +446,18 @@
 
             foreach ($this->nested as $condition => $field)
             {
-                $nestedArray[]['bool'] = $this->nest($condition, $field);
+                $pos = count($nestedArray);
+
+                foreach($field as $column => $value)
+                {
+                    if($condition === 'range')
+                    {
+                        $nestedArray[$pos]['bool']['should'][] = $this->nest($condition, $column, $value);
+                        continue;
+                    }
+
+                    $nestedArray[]['bool']['should'] = $this->nest($condition, $column, $value);
+                }
             }
 
             return $nestedArray;
@@ -454,26 +465,24 @@
 
         /**
          * @param $condition
-         * @param $field
+         * @param $column
+         * @param $value
          *
          * @return array
          */
-        private function nest($condition, $field)
+        private function nest($condition, $column, $value)
         {
             $nest = [];
 
-            foreach ($field as $column => $v)
+            foreach ($value as $v)
             {
                 if ($condition === 'range')
                 {
-                    $nest['should'][][$condition][$column] = $v;
-                    continue;
+                    $nest[$condition][$column] = $value;
+                    break;
                 }
 
-                for ($i = 0; $i < count($v); $i++)
-                {
-                    $nest['should'][][$condition][$column] = $v[$i];
-                }
+                $nest[][$condition][$column] = $v;
             }
 
             return $nest;

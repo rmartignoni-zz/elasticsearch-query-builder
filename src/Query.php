@@ -1,6 +1,6 @@
 <?php
 
-    namespace rmartignoni\ElasticSearch;
+    namespace eSapiens\Libraries\ElasticSearch;
 
     class Query extends Search
     {
@@ -9,7 +9,7 @@
          */
         public function getQuery()
         {
-            if ((count($this->must) + count($this->should)) == 1)
+            if ((count($this->must) + count($this->should)) === 1)
             {
                 return array_merge($this->must, $this->should);
             }
