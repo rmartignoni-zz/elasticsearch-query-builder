@@ -11,8 +11,10 @@ My aim is to communicate with ElasticSearch in a fully object oriented way.
 ```php
     // Connection is created on object instatiation
     $hosts = ['10.0.0.10:9200'];
+    $index = 'products';
+    $type = 'product';
     
-    $elasticSearch = new ElasticSearch\ElasticSearch($hosts, 'products', 'product');
+    $elasticSearch = new ElasticSearch\ElasticSearch($hosts, $index, $type);
 
     // SELECT * FROM products WHERE product_name = 'ElasticSearch' LIMIT 4
     $query = new ElasticSearch\Query();
