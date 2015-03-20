@@ -32,9 +32,9 @@ My aim is to communicate with ElasticSearch in a fully object oriented way.
      * SELECT id, product_name, price, updated_at 
      * FROM products 
      * WHERE product_name LIKE 'car%' AND category = 3 LIMIT 20 OFFSET 0
-     * $query = new ElasticSearch\Query();
-     * $query->wildcard('product_name', 'car*');
-     */
+     */ 
+    $query = new ElasticSearch\Query();
+    $query->wildcard('product_name', 'car*');
 
     $filter = new ElasticSearch\Filter();
     $filter->where('category', 3);
