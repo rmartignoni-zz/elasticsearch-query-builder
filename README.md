@@ -36,7 +36,12 @@ My aim is to communicate with ElasticSearch in a fully object oriented way.
     $filter->where('category', 3);
 
     // You should always use the take method before paging
-    $elasticSearch->select('id, product_name, price, updated_at')->setQuery($query)->setFilter($filter)->take(20)->page(0)->get();
+    $elasticSearch->select('id, product_name, price, updated_at')
+                  ->setQuery($query)
+                  ->setFilter($filter)
+                  ->take(20)
+                  ->page(0)
+                  ->get();
     
     // Paging
     $elasticSearch->page(1)->get(); 
