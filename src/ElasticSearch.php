@@ -234,8 +234,8 @@
                 return null;
             }
 
-//            log_message('DEBUG', 'JSON enviado para o ElasticSearch: ' . json_encode($body));
-//            log_message('DEBUG', 'Resultado do ElasticSearch: ' . json_encode($results));
+            //            log_message('DEBUG', 'JSON enviado para o ElasticSearch: ' . json_encode($body));
+            //            log_message('DEBUG', 'Resultado do ElasticSearch: ' . json_encode($results));
 
             return $this->processResults($results);
         }
@@ -249,8 +249,8 @@
          */
         private function processResults($results)
         {
-//            \Response::setCustomHeader('Total', $results['hits']['total']);
-//            \Response::setCustomHeader('Score', $results['hits']['max_score']);
+            //            \Response::setCustomHeader('Total', $results['hits']['total']);
+            //            \Response::setCustomHeader('Score', $results['hits']['max_score']);
 
             return $this->processHits($results['hits']['hits']);
         }
@@ -295,9 +295,11 @@
             } /*
              * Caso não encontre os dados na propriedade fields, pega da _source
              */
-            else if (isset($hit['_source'])) {
-                foreach ($hit['_source'] as $key => $value) {
-                    $result->{$key} = is_array($value) ? array_shift($value) : $value;
+            else {
+                if (isset($hit['_source'])) {
+                    foreach ($hit['_source'] as $key => $value) {
+                        $result->{$key} = is_array($value) ? array_shift($value) : $value;
+                    }
                 }
             }
 

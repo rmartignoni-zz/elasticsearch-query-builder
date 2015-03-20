@@ -39,12 +39,9 @@
          */
         private function registerQueriedFields($field)
         {
-            if (is_array($field))
-            {
-                foreach ($field as $key => $f)
-                {
-                    if (strpos($f, '^') !== false)
-                    {
+            if (is_array($field)) {
+                foreach ($field as $key => $f) {
+                    if (strpos($f, '^') !== false) {
                         $f = substr($f, 0, strpos($f, '^'));
                     }
 
@@ -67,10 +64,8 @@
         {
             $pos = count($this->{$operand});
 
-            foreach ($parameters as $key => $parameter)
-            {
-                if (empty($column))
-                {
+            foreach ($parameters as $key => $parameter) {
+                if (empty($column)) {
                     $this->{$operand}[($pos - 1)][$queryType][$key] = $parameter;
                     continue;
                 }
@@ -86,23 +81,15 @@
          */
         protected function prepareFields($fields)
         {
-            $fieldsArray = [];
-
-            if (strpos($fields, ',') !== false)
-            {
+            if (strpos($fields, ',') !== false) {
                 $fieldsArray = explode(',', $fields);
-            }
-            elseif (strpos($fields, ';') !== false)
-            {
+            } elseif (strpos($fields, ';') !== false) {
                 $fieldsArray = explode(';', $fields);
-            }
-            else
-            {
+            } else {
                 return $fields;
             }
 
-            foreach ($fieldsArray as $key => $value)
-            {
+            foreach ($fieldsArray as $key => $value) {
                 $fieldsArray[$key] = trim($value);
             }
 
@@ -121,15 +108,13 @@
         {
             $this->registerQueriedFields($column);
 
-            if ($nested)
-            {
+            if ($nested) {
                 $this->nestColumn('term', $column, $value, $operand);
 
                 return $this;
             }
 
-            if (is_array($value))
-            {
+            if (is_array($value)) {
                 $this->bindParameters($column, $value, 'term', $operand);
 
                 return $this;
@@ -152,8 +137,7 @@
         {
             $this->registerQueriedFields($column);
 
-            if (!is_array($value))
-            {
+            if (!is_array($value)) {
                 $value = $this->prepareFields($value);
             }
 
@@ -178,8 +162,7 @@
         {
             $this->registerQueriedFields($column);
 
-            if (is_array($value))
-            {
+            if (is_array($value)) {
                 $this->bindParameters($column, $value, 'wildcard', $operand);
 
                 return $this;
@@ -201,8 +184,7 @@
         {
             $this->registerQueriedFields($column);
 
-            if (is_array($terms))
-            {
+            if (is_array($terms)) {
                 $this->bindParameters($column, $terms, 'match', $operand);
 
                 return $this;
@@ -247,7 +229,7 @@
 
             $pos = count($this->{$operand});
 
-            $this->{$operand}[$pos]['match_phrase_prefix'][$column]['query'] = $phrase;
+            $this->{$operand}[$pos]['match_phrase_prefix'][$column]['query']          = $phrase;
             $this->{$operand}[$pos]['match_phrase_prefix'][$column]['max_expansions'] = $expansions;
 
             return $this;
@@ -262,8 +244,7 @@
          */
         protected function _multiMatch($columns, $phrase, $operand)
         {
-            if (!is_array($columns))
-            {
+            if (!is_array($columns)) {
                 $columns = $this->prepareFields($columns);
             }
 
@@ -273,8 +254,7 @@
 
             $this->{$operand}[$pos]['multi_match']['fields'] = $columns;
 
-            if (is_array($phrase))
-            {
+            if (is_array($phrase)) {
                 $this->bindParameters('', $phrase, 'multi_match', $operand);
 
                 return $this;
@@ -296,8 +276,7 @@
         {
             $this->registerQueriedFields($column);
 
-            if (is_array($value))
-            {
+            if (is_array($value)) {
                 $this->bindParameters($column, $value, 'prefix', $operand);
 
                 return $this;
@@ -321,8 +300,7 @@
         {
             $this->registerQueriedFields($column);
 
-            if ($nested)
-            {
+            if ($nested) {
                 $this->nestColumn('range', $column, ['gte' => $min, 'lte' => $max]);
 
                 return $this;
@@ -379,8 +357,7 @@
         {
             $this->registerQueriedFields($column);
 
-            if (is_array($pattern))
-            {
+            if (is_array($pattern)) {
                 $this->bindParameters($column, $pattern, 'regexp', $operand);
 
                 return $this;
@@ -402,8 +379,7 @@
         {
             $this->registerQueriedFields($column);
 
-            if (is_array($value))
-            {
+            if (is_array($value)) {
                 $this->bindParameters($column, $value, 'fuzzy', $operand);
             }
 
@@ -429,8 +405,7 @@
             $this->{$operand}[$pos]['fuzzy_like_this']['fields']    = is_array($column) ? $column : $this->prepareFields($column);
             $this->{$operand}[$pos]['fuzzy_like_this']['like_text'] = $value;
 
-            if (is_array($params))
-            {
+            if (is_array($params)) {
                 $this->bindParameters($column, $value, 'fuzzy_like_this', $operand);
             }
 
@@ -444,14 +419,11 @@
         {
             $nestedArray = [];
 
-            foreach ($this->nested as $condition => $field)
-            {
+            foreach ($this->nested as $condition => $field) {
                 $pos = count($nestedArray);
 
-                foreach($field as $column => $value)
-                {
-                    if($condition === 'range')
-                    {
+                foreach ($field as $column => $value) {
+                    if ($condition === 'range') {
                         $nestedArray[$pos]['bool']['should'][] = $this->nest($condition, $column, $value);
                         continue;
                     }
@@ -474,10 +446,8 @@
         {
             $nest = [];
 
-            foreach ($value as $v)
-            {
-                if ($condition === 'range')
-                {
+            foreach ($value as $v) {
+                if ($condition === 'range') {
                     $nest[$condition][$column] = $value;
                     break;
                 }
@@ -495,8 +465,7 @@
          */
         private function nestColumn($condition, $column, $value)
         {
-            if (is_array($value))
-            {
+            if (is_array($value)) {
                 $this->nested[$condition][$column] = $value;
 
                 return;

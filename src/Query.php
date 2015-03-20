@@ -9,19 +9,16 @@
          */
         public function getQuery()
         {
-            if ((count($this->must) + count($this->should)) === 1)
-            {
+            if ((count($this->must) + count($this->should)) === 1) {
                 return array_merge($this->must, $this->should);
             }
 
-            if (!empty($this->must))
-            {
+            if (!empty($this->must)) {
                 $this->query['bool']['must'] = $this->must;
             }
 
-            if (!empty($this->should))
-            {
-                $this->query['bool']['should'] = $this->should;
+            if (!empty($this->should)) {
+                $this->query['bool']['should']               = $this->should;
                 $this->query['bool']['minimum_should_match'] = empty($this->must) ? 1 : 0;
             }
 
@@ -33,8 +30,7 @@
          */
         public function getFields()
         {
-            if(!empty($this->fields))
-            {
+            if (!empty($this->fields)) {
                 return $this->fields;
             }
 
