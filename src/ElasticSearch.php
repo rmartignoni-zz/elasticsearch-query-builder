@@ -61,10 +61,12 @@
          */
         private $groupBy = null;
 
-        function __construct($hosts, $index, $type)
+        function __construct($index, $type)
         {
             $this->index = $index;
             $this->type  = $type;
+
+            $hosts = unserialize(ES_HOSTS);
 
             $this->es = new Client(['hosts' => $hosts]);
         }
@@ -79,7 +81,8 @@
         {
             $this->index = $index;
 
-            if (!is_null($document)) {
+            if (!is_null($document))
+            {
                 $this->type = $document;
             }
 
@@ -96,7 +99,8 @@
         {
             $this->type = $document;
 
-            if (!is_null($index)) {
+            if (!is_null($index))
+            {
                 $this->index = $index;
             }
 
@@ -112,23 +116,33 @@
         {
             $params['index'] = $this->index;
             $params['type']  = $this->type;
-            $params['body']  = $this->body;
+
+            if (in_array(ENVIRONMENT, [\Environment::DEVELOPMENT]))
+            {
+                // $params['explain'] = true;
+            }
+
+            $params['body'] = $this->body;
 
             $this->buildQuery($params);
 
-            if (!is_null($this->filter)) {
+            if (!is_null($this->filter))
+            {
                 $params['body']['query']['filtered']['filter'] = $this->filter;
             }
 
-            if (!is_null($this->postFilter)) {
+            if (!is_null($this->postFilter))
+            {
                 $params['body']['post_filter'] = (count($this->postFilter) == 1 ? array_shift($this->postFilter) : $this->postFilter);
             }
 
-            if (!is_null($this->sort)) {
+            if (!is_null($this->sort))
+            {
                 $params['body']['sort'] = $this->buildSort();
             }
 
-            if (!is_null($this->groupBy)) {
+            if (!is_null($this->groupBy))
+            {
                 $params['body']['aggs'] = $this->groupBy;
             }
 
@@ -157,17 +171,21 @@
          */
         private function buildSort()
         {
-            if (count($this->sort) == 1 && !isset($this->sort[0]['proximity'])) {
+            if (count($this->sort) == 1 && !isset($this->sort[0]['proximity']))
+            {
                 return array_shift($this->sort);
             }
 
             $sort = [];
 
-            while ($condition = array_shift($this->sort)) {
+            while ($condition = array_shift($this->sort))
+            {
                 $column = key($condition);
 
-                if ($column === 'proximity') {
-                    if (is_null($condition[$column])) {
+                if ($column === 'proximity')
+                {
+                    if (is_null($condition[$column]))
+                    {
                         continue;
                     }
 
@@ -197,15 +215,18 @@
          */
         private function buildQuery(&$params)
         {
-            if (!is_null($this->filter)) {
-                if (empty($this->query)) {
+            if (!is_null($this->filter))
+            {
+                if (empty($this->query))
+                {
                     return $params['body']['query']['filtered']['query']['match_all'] = new \stdClass;
                 }
 
-                return $params['body']['query']['filtered']['query'] = ((!isset($this->query['bool']) && count($this->query)) == 1 ? array_shift($this->query) : $this->query);
+                return $params['body']['query']['filtered']['query'] = $this->query;
             }
 
-            if (is_null($this->query)) {
+            if (is_null($this->query))
+            {
                 return $params['body']['query']['match_all'] = new \stdClass;
             }
 
@@ -221,36 +242,67 @@
         {
             $body = $this->buildRequestBody();
 
-            try {
+            try
+            {
                 $results = $this->es->search($body);
-            } catch (\Exception $e) {
+            }
+            catch (\Exception $e)
+            {
                 log_message('ERROR', 'Erro no ElasticSearch: ' . $e->getMessage());
                 log_message('ERROR', 'JSON enviado para o ElasticSearch: ' . json_encode($body));
 
                 $results = null;
             }
 
-            if (empty($results)) {
+            if (empty($results))
+            {
                 return null;
             }
 
-            //            log_message('DEBUG', 'JSON enviado para o ElasticSearch: ' . json_encode($body));
-            //            log_message('DEBUG', 'Resultado do ElasticSearch: ' . json_encode($results));
+            // log_message('DEBUG', 'JSON enviado para o ElasticSearch: ' . json_encode($body));
+            // log_message('DEBUG', 'Resultado do ElasticSearch: ' . json_encode($results) . "\n\n");
 
-            return $this->processResults($results);
+            $perPage = null;
+            if (isset($body['body']['size']))
+            {
+                $perPage = intval($body['body']['size']);
+            }
+
+            return $this->processResults($results, $perPage);
         }
 
         /**
          * processResults($results)
          *
          * @param $results
+         * @param $perPage
          *
          * @return \stdClass
          */
-        private function processResults($results)
+        private function processResults($results, $perPage = null)
         {
-            //            \Response::setCustomHeader('Total', $results['hits']['total']);
-            //            \Response::setCustomHeader('Score', $results['hits']['max_score']);
+            /*
+             * Limites para que os valores da base não sejam expostos diretamente.
+             */
+            if (!(is_null($perPage)) && ($perPage > 0))
+            {
+                $pages = (($results['hits']['total'] > ES_MAX_PAGINATION) ? (ES_MAX_PAGINATION / $perPage) : $results['hits']['total'] / $perPage);
+                $pages = ceil($pages);
+                \Response::setCustomHeader('Pages', $pages);
+            }
+
+            /*
+             * Limita o total de resultados processados pelo ES
+             */
+            $results['hits']['total'] = (($results['hits']['total'] > ES_MAX_RESULTS) ? ES_MAX_RESULTS : $results['hits']['total']);
+
+            /*
+             * Formata o valor de total para ser enviado pelo Header
+             */
+            $total = (($results['hits']['total'] === ES_MAX_RESULTS) ? '+' . number_format($results['hits']['total'], 0, ',', '.') : number_format($results['hits']['total'], 0, ',', '.'));
+
+            \Response::setCustomHeader('Total', $total);
+            \Response::setCustomHeader('Score', $results['hits']['max_score']);
 
             return $this->processHits($results['hits']['hits']);
         }
@@ -267,7 +319,8 @@
             $count   = count($hits);
             $results = [];
 
-            for ($i = 0; $i < $count; $i++) {
+            for ($i = 0; $i < $count; $i++)
+            {
                 $results[] = $this->processHit($hits[$i]);
             }
 
@@ -288,28 +341,40 @@
             /*
              * Quando o usuário especifica os campos na consulta os dados são retornados na propriedade fields
              */
-            if (isset($hit['fields'])) {
-                foreach ($hit['fields'] as $key => $value) {
+            if (isset($hit['fields']))
+            {
+                foreach ($hit['fields'] as $key => $value)
+                {
                     $result->{$key} = is_array($value) ? array_shift($value) : $value;
                 }
-            } /*
+            }
+
+            /*
              * Caso não encontre os dados na propriedade fields, pega da _source
              */
-            else {
-                if (isset($hit['_source'])) {
-                    foreach ($hit['_source'] as $key => $value) {
-                        $result->{$key} = is_array($value) ? array_shift($value) : $value;
-                    }
+            else if (isset($hit['_source']))
+            {
+                foreach ($hit['_source'] as $key => $value)
+                {
+                    $result->{$key} = is_array($value) ? array_shift($value) : $value;
                 }
+            }
+
+
+            if (isset($hit['sort']))
+            {
+                $result->sort = $hit['sort'];
             }
 
             /*
              * Caso o usuário tenha solicitado o highlight dos campos buscados, monta o objeto com estes dados
              */
-            if (isset($hit['highlight'])) {
+            if (isset($hit['highlight']))
+            {
                 $result->highlight = new \stdClass;
 
-                foreach ($hit['highlight'] as $key => $value) {
+                foreach ($hit['highlight'] as $key => $value)
+                {
                     $result->highlight->{$key} = is_array($value) ? $value[0] : $value;
                 }
             }
@@ -328,7 +393,8 @@
         {
             $from = 0;
 
-            if (isset($this->body['size'])) {
+            if (isset($this->body['size']))
+            {
                 $from = $page * $this->body['size'];
             }
 
@@ -361,11 +427,13 @@
          */
         public function score($score, $type = 'gt')
         {
-            if ($type == 'gt') {
+            if ($type == 'gt')
+            {
                 $this->body['min_score'] = $score;
             }
 
-            if ($type == 'lt') {
+            if ($type == 'lt')
+            {
                 $this->body['max_score'] = $score;
             }
 
@@ -381,13 +449,17 @@
          */
         public function select($fields)
         {
-            if (!is_array($fields)) {
+            if (!is_array($fields))
+            {
                 $fields = $this->prepareFields($fields);
             }
 
-            if (isset($this->body['fields'])) {
+            if (isset($this->body['fields']))
+            {
                 $this->body['fields'] = array_merge($this->body['fields'], $fields);
-            } else {
+            }
+            else
+            {
                 $this->body['fields'] = $fields;
             }
 
@@ -405,19 +477,23 @@
         {
             $fieldsArray = [];
 
-            if (strpos($fields, '*') !== false) {
+            if (strpos($fields, '*') !== false)
+            {
                 return $fields;
             }
 
-            if (strpos($fields, ',') !== false) {
+            if (strpos($fields, ',') !== false)
+            {
                 $fieldsArray = explode(',', $fields);
             }
 
-            if (strpos($fields, ';') !== false) {
+            if (strpos($fields, ';') !== false)
+            {
                 $fieldsArray = explode(';', $fields);
             }
 
-            foreach ($fieldsArray as $key => $value) {
+            foreach ($fieldsArray as $key => $value)
+            {
                 $fieldsArray[$key] = trim($value);
             }
 
@@ -432,7 +508,8 @@
          */
         public function orderBy($column, $order = 'asc')
         {
-            if (is_array($column)) {
+            if (is_array($column))
+            {
                 $key                = key($column);
                 $this->sort[][$key] = $column[$key];
 

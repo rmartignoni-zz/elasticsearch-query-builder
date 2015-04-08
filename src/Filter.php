@@ -23,7 +23,8 @@
          */
         public function hasFilters()
         {
-            if (empty($this->must) && empty($this->should) && empty($this->not) && empty($this->nested)) {
+            if (empty($this->must) && empty($this->should) && empty($this->not) && empty($this->nested))
+            {
                 return false;
             }
 
@@ -37,23 +38,28 @@
          */
         public function getFilters()
         {
-            if ((count($this->must) + count($this->should) + count($this->nested)) == 1 && empty($this->not)) {
+            if ((count($this->must) + count($this->should) + count($this->nested)) == 1 && empty($this->not))
+            {
                 return array_merge($this->must, $this->should, $this->buildNested());
             }
 
-            if (!empty($this->must)) {
-                $this->filters['bool']['must'] = (count($this->must) == 1 ? array_shift($this->must) : $this->must);
+            if (!empty($this->must))
+            {
+                $this->filters['bool']['must'] = $this->must;
             }
 
-            if (!empty($this->should)) {
-                $this->filters['bool']['should'] = (count($this->should) == 1 ? array_shift($this->should) : $this->should);
+            if (!empty($this->should))
+            {
+                $this->filters['bool']['should'] = $this->should;
             }
 
-            if (!empty($this->not)) {
-                $this->filters['bool']['must_not'] = (count($this->not) == 1 ? array_shift($this->not) : $this->not);
+            if (!empty($this->not))
+            {
+                $this->filters['bool']['must_not'] = $this->not;
             }
 
-            if (!empty($this->nested)) {
+            if(!empty($this->nested))
+            {
                 $this->filters['bool']['must'] = isset($this->filters['bool']['must']) ? array_merge($this->filters['bool']['must'], $this->buildNested()) : $this->buildNested();
             }
 
@@ -213,6 +219,17 @@
         public function orStarsWith($column, $value)
         {
             return $this->_startsWith($column, $value, 'should');
+        }
+
+        /**
+         * @param $column
+         * @param $value
+         *
+         * @return $this
+         */
+        public function gt($column, $value)
+        {
+            return $this->_gt($column, $value, 'and');
         }
 
         /**
