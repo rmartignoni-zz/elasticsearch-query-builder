@@ -1,4 +1,4 @@
-# rmartignoni/elasticsearch
+# rmartignoni/elasticsearch-query-builder
 
 This is a pre-alpha version of a library to query data from ElasticSearch. I have just started the development of this library and there is a lot to be done.
 

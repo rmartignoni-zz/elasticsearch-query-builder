@@ -23,8 +23,7 @@
          */
         public function hasFilters()
         {
-            if (empty($this->must) && empty($this->should) && empty($this->not) && empty($this->nested))
-            {
+            if (empty($this->must) && empty($this->should) && empty($this->not) && empty($this->nested)) {
                 return false;
             }
 
@@ -38,29 +37,25 @@
          */
         public function getFilters()
         {
-            if ((count($this->must) + count($this->should) + count($this->nested)) == 1 && empty($this->not))
-            {
+            if ((count($this->must) + count($this->should) + count($this->nested)) == 1 && empty($this->not)) {
                 return array_merge($this->must, $this->should, $this->buildNested());
             }
 
-            if (!empty($this->must))
-            {
+            if (!empty($this->must)) {
                 $this->filters['bool']['must'] = $this->must;
             }
 
-            if (!empty($this->should))
-            {
+            if (!empty($this->should)) {
                 $this->filters['bool']['should'] = $this->should;
             }
 
-            if (!empty($this->not))
-            {
+            if (!empty($this->not)) {
                 $this->filters['bool']['must_not'] = $this->not;
             }
 
-            if(!empty($this->nested))
-            {
-                $this->filters['bool']['must'] = isset($this->filters['bool']['must']) ? array_merge($this->filters['bool']['must'], $this->buildNested()) : $this->buildNested();
+            if (!empty($this->nested)) {
+                $this->filters['bool']['must'] = isset($this->filters['bool']['must']) ? array_merge($this->filters['bool']['must'],
+                    $this->buildNested()) : $this->buildNested();
             }
 
             return $this->filters;
